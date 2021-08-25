@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{main_title}}{% endblock %}
+{% block content %}
+<div class="row">
+  <h1>{{ how_i_can }}</h1>
+  <aside class="col-12 col-md-3">
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item">
+          {{ tech }}
+      </li>
+      <li class="list-group-item">
+        {{ tech_two }}
+      </li>
+    </ul>
+  </aside>
+  <article class="col-12 col-md-9">
+    <br><span style="color:#08278d"> {{ obout_tech }} </span>
+  </article>
+</div>
+{% endblock %}
