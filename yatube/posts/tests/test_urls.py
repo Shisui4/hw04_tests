@@ -46,14 +46,14 @@ class PostURLTests(TestCase):
     def test_urls_current_use_template(self):
         """Проверка использования шаблонов для страниц"""
         templates_urls_use = {
-            'posts/index.html': '/',
-            'posts/group_list.html': '/group/test-slug/',
-            'posts/profile.html': '/profile/author/',
-            'posts/post_detail.html': '/posts/1/',
-            'posts/post_create.html': '/create/',
-            'posts/post_create.html': '/posts/1/edit/'
+            '/': 'posts/index.html',
+            '/group/test-slug/': 'posts/group_list.html',
+            '/profile/author/': 'posts/profile.html',
+            '/posts/1/': 'posts/post_detail.html',
+            '/create/': 'posts/post_create.html',
+            '/posts/1/edit/': 'posts/post_create.html'
         }
-        for template, adress in templates_urls_use.items():
+        for adress, template in templates_urls_use.items():
             with self.subTest(adress=adress):
                 response = self.authorized_client.get(adress)
                 self.assertTemplateUsed(response, template)
