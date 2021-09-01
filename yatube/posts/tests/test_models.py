@@ -18,20 +18,20 @@ class PostModelTest(TestCase):
         )
         cls.post = Post.objects.create(
             author=cls.user,
-            text='Тестовая группа'
+            text='Тестовая запись на проверку корректного отоброжения'
         )
 
     def test_models_have_correct_object_names(self):
         """Проверяем, что у моделей корректно работает __str__."""
         post = PostModelTest.post
         post_text = post.text[:15]
-        self.assertEqual(post_text, 'Тестовая группа')
+        self.assertEqual(post_text, str(post))
 
     def test_models_have_current_group_name(self):
         """Проверка на правильность названия Групп"""
         group = PostModelTest.group
         group_name = group.title
-        self.assertEqual(group_name, 'Тестовая группа')
+        self.assertEqual(group_name, str(group))
 
     def test_help_text(self):
         """help_text в полях совпадает с ожидаемым."""

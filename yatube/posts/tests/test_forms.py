@@ -23,11 +23,11 @@ class PostFormTest(TestCase):
             text='Текст для проверки создания',
             author=cls.user,
             group=cls.group,
-            pk=1
         )
         cls.form = PostForm()
 
     def setUp(self):
+        self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
@@ -69,5 +69,31 @@ class PostFormTest(TestCase):
             Post.objects.filter(
                 text='Какой то текст для проверки изменения поста',
                 group=self.group.id,
+                author=self.user
+            ).exists()
+        )
+
+    def test_create_post_guest(self):
+        """Валидная форма не создает запись в Post гостем."""
+        posts_count = Post.objects.count()
+        form_data = {
+            'text': 'Какой то текст для проверки',
+            'group': self.group.id
+        }
+        response = self.guest_client.post(
+            reverse('posts:post_create'),
+            data=form_data,
+            follow=True
+        )
+        login_url = reverse('users:login')
+        new_post_url = reverse('posts:post_create')
+        target_url = f'{login_url}?next={new_post_url}'
+        self.assertRedirects(response, target_url)
+        self.assertEqual(Post.objects.count(), posts_count)
+        self.assertFalse(
+            Post.objects.filter(
+                text='Какой то текст для проверки',
+                group=self.group.id,
+                author=self.user
             ).exists()
         )

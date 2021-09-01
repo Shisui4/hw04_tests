@@ -6,24 +6,6 @@ from ..models import Group, Post
 User = get_user_model()
 
 
-class StaticURLTests(TestCase):
-
-    def setUp(self):
-        self.guest_client = Client()
-
-    def test_homepage(self):
-        response = self.guest_client.get('/')
-        self.assertEqual(response.status_code, 200)
-
-    def test_author(self):
-        response = self.guest_client.get('/about/author/')
-        self.assertEqual(response.status_code, 200)
-
-    def test_tech(self):
-        response = self.guest_client.get('/about/tech/')
-        self.assertEqual(response.status_code, 200)
-
-
 class PostURLTests(TestCase):
 
     @classmethod
@@ -33,11 +15,17 @@ class PostURLTests(TestCase):
             title='Группа тестовая',
             slug='test-slug'
         )
+        cls.user_more = User.objects.create_user(username='test')
         cls.user = User.objects.create_user(username='author')
         cls.post = Post.objects.create(
             text='Какой то текст',
             author=cls.user,
             group=cls.group
+        )
+        cls.post_more = Post.objects.create(
+            text='ещё 1 пост',
+            author=cls.user_more,
+            group=None
         )
         cls.authorized_client = Client()
         cls.authorized_client.force_login(cls.user)
@@ -67,12 +55,12 @@ class PostURLTests(TestCase):
             '/posts/1/': 200,
         }
         for adress, status_code in list_html_status.items():
-            with self.subTest(status_code=status_code):
+            with self.subTest(adress=adress):
                 response = self.guest_client.get(adress)
                 self.assertEqual(response.status_code, status_code)
 
     def test_availability_check_404(self):
-        """Проверка доступности стр. неавтор-му польз-ю"""
+        """Проверка при переходе по несуществующему url"""
         adress_404 = '/unexisting_page/'
         response = self.guest_client.get(adress_404)
         self.assertEqual(response.status_code, 404)
@@ -83,8 +71,26 @@ class PostURLTests(TestCase):
         response = self.authorized_client.get(adress_create)
         self.assertEqual(response.status_code, 200)
 
+    def test_availability_check_guest(self):
+        """Проверка редиректа при попытке создания поста гостем"""
+        adress_create = '/create/'
+        response = self.guest_client.get(adress_create)
+        self.assertEqual(response.status_code, 302)
+
     def test_availability_check_author(self):
         """Проверка доступности стр. изменения поста автором"""
         adress_edit = '/posts/1/edit/'
         response = self.authorized_client.get(adress_edit)
         self.assertEqual(response.status_code, 200)
+
+    def test_redirect_edit_for_guest(self):
+        """Проверка редиректа при попытке изменения поста гостем"""
+        adress_edit = '/posts/1/edit/'
+        response = self.guest_client.get(adress_edit)
+        self.assertEqual(response.status_code, 302)
+
+    def test_redirect_edit_for_another(self):
+        """Проверка редиректа при попытке изменения поста не автором"""
+        adress_edit = '/posts/2/edit/'
+        response = self.authorized_client.get(adress_edit)
+        self.assertEqual(response.status_code, 302)

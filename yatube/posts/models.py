@@ -26,4 +26,4 @@ class Post(models.Model):
                               help_text='Поле выбора группы')
 
     def __str__(self):
-        return self.text
+        return self.text[:15]
