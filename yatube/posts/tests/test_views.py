@@ -111,15 +111,15 @@ class PostsPageTest(TestCase):
         """Шаблон post_detail сформирован с правильным контекстом."""
         response = self.authorized_client.get(
             reverse('posts:post_detail',
-                    kwargs={'post_id': self.post_page.id}))
+                    kwargs={'post_id': self.post_page[0].id}))
         self.assertEqual(response.context.get('selected_post').text,
-                         self.post.text)
+                         self.post_page[0].text)
         self.assertEqual(response.context.get('selected_post').author,
                          self.user)
         self.assertEqual(response.context.get('selected_post').group,
-                         self.post.group)
+                         self.post_page[0].group)
         self.assertEqual(response.context.get(
-            'selected_post').group.description, self.group_more.description)
+            'selected_post').group.description, self.group.description)
         self.assertEqual(response.context.get('author'), self.user)
         self.assertEqual(response.context.get('posts_count'), 12)
 
@@ -134,7 +134,6 @@ class PostsPageTest(TestCase):
             with self.subTest(value=value):
                 form_field = response.context.get('form').fields.get(value)
                 self.assertIsInstance(form_field, expected)
-        print()
 
     def test_post_edit_current_context(self):
         """Шаблон post_edit сформирован с правильным контекстом."""
@@ -154,15 +153,16 @@ class PostsPageTest(TestCase):
         """Проверка поста с указанной группой"""
         response = self.authorized_client.get(
             reverse('posts:group_list', kwargs={'slug': self.group.slug}))
-        first_object = response.context['page_obj'][0]
-        index_text_0 = first_object.text
-        index_author_0 = first_object.author
-        index_group_0 = first_object.group
-        index_group_description_0 = first_object.group.description
-        self.assertEqual(index_text_0, self.post_page[5].text)
-        self.assertEqual(index_author_0, self.user)
-        self.assertEqual(index_group_0, self.group)
-        self.assertEqual(index_group_description_0, self.group.description)
+        post_text = ''
+        for value in range(12):
+            post_text += self.post_page[value].text
+        for cont, i in zip(
+                response.context['page_obj'].object_list, range(10)):
+            self.assertIn(cont.text, post_text)
+            self.assertEqual(cont.author, self.user)
+            self.assertEqual(cont.group, self.group)
+            self.assertEqual(cont.group.description, self.group.description)
+        self.assertEqual(len(response.context['page_obj']), 10)
 
     def test_post_not_in_another_group(self):
         """Пост с группой group не добавился в group_more"""
