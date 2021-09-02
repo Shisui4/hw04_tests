@@ -24,22 +24,23 @@ class PostsPageTest(TestCase):
             description='Stoner'
         )
         cls.user = User.objects.create_user(username='TesterIgnat')
-        cls.post_page = [Post.objects.create(
-            text=f'Тест була №{x}', author=cls.user,
-            group=cls.group) for x in range(12)]
-        #for post_page in range(12):
-        #    Post.objects.create(
-        #        text=f'Тест була №{post_page}', author=cls.user,
-        #        group=cls.group)
+        for i in range(12):
+            Post.objects.create(
+                text=f'Текст поста №{i}',
+                author=cls.user,
+                group=cls.group,
+            )
+        cls.list_id = Post.objects.all()
 
     def setUp(self):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
     def idk(self, response, response_second_page):
+        sort = Post.objects.all().order_by('-pub_date')
         for i, cont in enumerate(
                 response.context['page_obj'].object_list):
-            self.assertEqual(cont.text, self.post_page[i].text)
+            self.assertEqual(cont.text, sort[i].text)
             self.assertEqual(cont.author, self.user)
             self.assertEqual(cont.group, self.group)
             self.assertEqual(cont.group.description, self.group.description)
@@ -55,10 +56,10 @@ class PostsPageTest(TestCase):
             reverse('posts:profile',
                     kwargs={'username': self.user}): 'posts/profile.html',
             reverse('posts:post_detail',
-                    kwargs={'post_id': self.post_page[0].id}
+                    kwargs={'post_id': self.list_id[0].id}
                     ): 'posts/post_detail.html',
             reverse('posts:post_create'): 'posts/post_create.html',
-            reverse('posts:post_edit', kwargs={'post_id': self.post_page[0].id}
+            reverse('posts:post_edit', kwargs={'post_id': self.list_id[0].id}
                     ): 'posts/post_create.html',
         }
         for reverse_name, template in templates_pages_name.items():
@@ -69,22 +70,9 @@ class PostsPageTest(TestCase):
     def test_index_current_context(self):
         """Шаблон index сформирован с правильным контекстом."""
         response = self.authorized_client.get(reverse('posts:index'))
-        response_second_page = self.client.get(
+        response_second = self.client.get(
             reverse('posts:index'), {'page': 2})
-        post_text = ''
-        for value in range(len(self.post_page)):
-            post_text += self.post_page[value].text
-        for i, cont in enumerate(
-                response.context['page_obj'].object_list):
-            self.assertIn(cont.text, post_text)
-            self.assertEqual(cont.author, self.user)
-            self.assertEqual(cont.group, self.group)
-            self.assertEqual(cont.group.description, self.group.description)
-        self.assertEqual(len(response.context['page_obj']), 10)
-        self.assertEqual(len(response_second_page.context['page_obj']), 2)
-        print(self.post_page[0].__dict__)
-        print(self.post_page[1].__dict__)
-        print(self.post_page[2].__dict__)
+        self.idk(response, response_second)
 
     def test_group_list_current_context(self):
         """Шаблон group_list сформирован с правильным контекстом."""
@@ -108,13 +96,13 @@ class PostsPageTest(TestCase):
         """Шаблон post_detail сформирован с правильным контекстом."""
         response = self.authorized_client.get(
             reverse('posts:post_detail',
-                    kwargs={'post_id': self.post_page[0].id}))
+                    kwargs={'post_id': self.list_id[0].id}))
         self.assertEqual(response.context.get('selected_post').text,
-                         self.post_page[0].text)
+                         self.list_id[0].text)
         self.assertEqual(response.context.get('selected_post').author,
                          self.user)
         self.assertEqual(response.context.get('selected_post').group,
-                         self.post_page[0].group)
+                         self.list_id[0].group)
         self.assertEqual(response.context.get(
             'selected_post').group.description, self.group.description)
         self.assertEqual(response.context.get('author'), self.user)
@@ -136,7 +124,7 @@ class PostsPageTest(TestCase):
         """Шаблон post_edit сформирован с правильным контекстом."""
         response = self.authorized_client.get(
             reverse('posts:post_edit',
-                    kwargs={'post_id': self.post_page[0].id}))
+                    kwargs={'post_id': self.list_id[0].id}))
         form_fields = {
             'text': forms.fields.CharField,
             'group': forms.fields.ChoiceField
