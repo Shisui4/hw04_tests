@@ -24,7 +24,6 @@ class PostFormTest(TestCase):
             author=cls.user,
             group=cls.group,
         )
-        cls.form = PostForm()
 
     def setUp(self):
         self.guest_client = Client()
@@ -50,6 +49,7 @@ class PostFormTest(TestCase):
             Post.objects.filter(
                 text='Какой то текст для проверки',
                 group=self.group.id,
+                author=self.user
             ).exists()
         )
 

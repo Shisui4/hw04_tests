@@ -27,10 +27,24 @@ class PostsPageTest(TestCase):
         cls.post_page = [Post.objects.create(
             text=f'Тест була №{x}', author=cls.user,
             group=cls.group) for x in range(12)]
+        #for post_page in range(12):
+        #    Post.objects.create(
+        #        text=f'Тест була №{post_page}', author=cls.user,
+        #        group=cls.group)
 
     def setUp(self):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
+
+    def idk(self, response, response_second_page):
+        for i, cont in enumerate(
+                response.context['page_obj'].object_list):
+            self.assertEqual(cont.text, self.post_page[i].text)
+            self.assertEqual(cont.author, self.user)
+            self.assertEqual(cont.group, self.group)
+            self.assertEqual(cont.group.description, self.group.description)
+        self.assertEqual(len(response.context['page_obj']), 10)
+        self.assertEqual(len(response_second_page.context['page_obj']), 2)
 
     def test_pages_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
@@ -60,52 +74,35 @@ class PostsPageTest(TestCase):
         post_text = ''
         for value in range(len(self.post_page)):
             post_text += self.post_page[value].text
-        for cont, i in zip(
-                response.context['page_obj'].object_list, range(10)):
+        for i, cont in enumerate(
+                response.context['page_obj'].object_list):
             self.assertIn(cont.text, post_text)
             self.assertEqual(cont.author, self.user)
             self.assertEqual(cont.group, self.group)
             self.assertEqual(cont.group.description, self.group.description)
         self.assertEqual(len(response.context['page_obj']), 10)
         self.assertEqual(len(response_second_page.context['page_obj']), 2)
+        print(self.post_page[0].__dict__)
+        print(self.post_page[1].__dict__)
+        print(self.post_page[2].__dict__)
 
     def test_group_list_current_context(self):
         """Шаблон group_list сформирован с правильным контекстом."""
         response = self.authorized_client.get(
             reverse('posts:group_list', kwargs={'slug': self.group.slug}))
-        response_second_page = self.client.get(
+        response_second = self.client.get(
             reverse('posts:group_list',
                     kwargs={'slug': self.group.slug}), {'page': 2})
-        post_text = ''
-        for value in range(len(self.post_page)):
-            post_text += self.post_page[value].text
-        for cont, i in zip(
-                response.context['page_obj'].object_list, range(10)):
-            self.assertIn(cont.text, post_text)
-            self.assertEqual(cont.author, self.user)
-            self.assertEqual(cont.group, self.group)
-            self.assertEqual(cont.group.description, self.group.description)
-        self.assertEqual(len(response.context['page_obj']), 10)
-        self.assertEqual(len(response_second_page.context['page_obj']), 2)
+        self.idk(response, response_second)
 
     def test_profile_current_context(self):
         """Шаблон profile сформирован с правильным контекстом."""
         response = self.authorized_client.get(
             reverse('posts:profile', kwargs={'username': self.user}))
-        response_second_page = self.authorized_client.get(
+        response_second = self.authorized_client.get(
             reverse('posts:profile',
                     kwargs={'username': self.user}), {'page': 2})
-        post_text = ''
-        for value in range(len(self.post_page)):
-            post_text += self.post_page[value].text
-        for cont, i in zip(
-                response.context['page_obj'].object_list, range(10)):
-            self.assertIn(cont.text, post_text)
-            self.assertEqual(cont.author, self.user)
-            self.assertEqual(cont.group, self.group)
-            self.assertEqual(cont.group.description, self.group.description)
-        self.assertEqual(len(response.context['page_obj']), 10)
-        self.assertEqual(len(response_second_page.context['page_obj']), 2)
+        self.idk(response, response_second)
 
     def test_post_detail_current_context(self):
         """Шаблон post_detail сформирован с правильным контекстом."""
