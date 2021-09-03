@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django import forms
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
@@ -24,19 +25,32 @@ class PostsPageTest(TestCase):
             description='Stoner'
         )
         cls.user = User.objects.create_user(username='TesterIgnat')
-        for i in range(12):
-            Post.objects.create(
-                text=f'Текст поста №{i}',
-                author=cls.user,
-                group=cls.group,
-            )
+        cls.post_page = Post.objects.bulk_create([
+            Post(text='Тест булка 1', author=cls.user, group=cls.group),
+            Post(text='Тест булки 2', author=cls.user, group=cls.group),
+            Post(text='Тест балки 3', author=cls.user, group=cls.group),
+            Post(text='Тест булки 4', author=cls.user, group=cls.group),
+            Post(text='Тест балки 5', author=cls.user, group=cls.group),
+            Post(text='Тест булка 6', author=cls.user, group=cls.group),
+            Post(text='Тест булки 7', author=cls.user, group=cls.group),
+            Post(text='Тест балки 8', author=cls.user, group=cls.group),
+            Post(text='Тест булка 9', author=cls.user, group=cls.group),
+            Post(text='Тест балки 10', author=cls.user, group=cls.group),
+            Post(text='Тест бул 11', author=cls.user, group=cls.group),
+            Post(text='Тест бал 12', author=cls.user, group=cls.group),
+        ])
         cls.list_id = Post.objects.all()
 
     def setUp(self):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
-    def method_for_tests(self, response, response_second_page):
+    def comparing_posts_in_context(self, response, response_second_page):
+        time_update = []
+        for i, post in enumerate(Post.objects.all()):
+            self.post_page[i].pub_date += timedelta(hours=i)
+            time_update.append(post)
+        Post.objects.bulk_update(time_update, ['pub_date'])
         sort = Post.objects.all().order_by('-pub_date')
         for i, cont in enumerate(
                 response.context['page_obj'].object_list):
@@ -71,7 +85,7 @@ class PostsPageTest(TestCase):
         response = self.authorized_client.get(reverse('posts:index'))
         response_second = self.client.get(
             reverse('posts:index'), {'page': 2})
-        self.method_for_tests(response, response_second)
+        self.comparing_posts_in_context(response, response_second)
 
     def test_group_list_current_context(self):
         """Шаблон group_list сформирован с правильным контекстом."""
@@ -80,7 +94,7 @@ class PostsPageTest(TestCase):
         response_second = self.client.get(
             reverse('posts:group_list',
                     kwargs={'slug': self.group.slug}), {'page': 2})
-        self.method_for_tests(response, response_second)
+        self.comparing_posts_in_context(response, response_second)
 
     def test_profile_current_context(self):
         """Шаблон profile сформирован с правильным контекстом."""
@@ -89,7 +103,7 @@ class PostsPageTest(TestCase):
         response_second = self.authorized_client.get(
             reverse('posts:profile',
                     kwargs={'username': self.user}), {'page': 2})
-        self.method_for_tests(response, response_second)
+        self.comparing_posts_in_context(response, response_second)
 
     def test_post_detail_current_context(self):
         """Шаблон post_detail сформирован с правильным контекстом."""
