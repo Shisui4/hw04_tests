@@ -36,14 +36,13 @@ class PostsPageTest(TestCase):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
-    def idk(self, response, response_second_page):
+    def method_for_tests(self, response, response_second_page):
         sort = Post.objects.all().order_by('-pub_date')
         for i, cont in enumerate(
                 response.context['page_obj'].object_list):
             self.assertEqual(cont.text, sort[i].text)
-            self.assertEqual(cont.author, self.user)
-            self.assertEqual(cont.group, self.group)
-            self.assertEqual(cont.group.description, self.group.description)
+            self.assertEqual(cont.author, sort[i].author)
+            self.assertEqual(cont.group, sort[i].group)
         self.assertEqual(len(response.context['page_obj']), 10)
         self.assertEqual(len(response_second_page.context['page_obj']), 2)
 
@@ -72,7 +71,7 @@ class PostsPageTest(TestCase):
         response = self.authorized_client.get(reverse('posts:index'))
         response_second = self.client.get(
             reverse('posts:index'), {'page': 2})
-        self.idk(response, response_second)
+        self.method_for_tests(response, response_second)
 
     def test_group_list_current_context(self):
         """Шаблон group_list сформирован с правильным контекстом."""
@@ -81,7 +80,7 @@ class PostsPageTest(TestCase):
         response_second = self.client.get(
             reverse('posts:group_list',
                     kwargs={'slug': self.group.slug}), {'page': 2})
-        self.idk(response, response_second)
+        self.method_for_tests(response, response_second)
 
     def test_profile_current_context(self):
         """Шаблон profile сформирован с правильным контекстом."""
@@ -90,7 +89,7 @@ class PostsPageTest(TestCase):
         response_second = self.authorized_client.get(
             reverse('posts:profile',
                     kwargs={'username': self.user}), {'page': 2})
-        self.idk(response, response_second)
+        self.method_for_tests(response, response_second)
 
     def test_post_detail_current_context(self):
         """Шаблон post_detail сформирован с правильным контекстом."""
