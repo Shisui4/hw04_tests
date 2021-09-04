@@ -39,19 +39,20 @@ class PostsPageTest(TestCase):
             Post(text='Тест балки 10', author=cls.user, group=cls.group),
             Post(text='Тест бул 11', author=cls.user, group=cls.group),
             Post(text='Тест бал 12', author=cls.user, group=cls.group),
+            Post(text='Тест бал 13', author=cls.user, group=cls.group, ),
         ])
         cls.list_id = Post.objects.all()
 
     def setUp(self):
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
-
-    def comparing_posts_in_context(self, response, response_second_page):
         time_update = []
         for i, post in enumerate(Post.objects.all()):
             self.post_page[i].pub_date += timedelta(hours=i)
             time_update.append(post)
         Post.objects.bulk_update(time_update, ['pub_date'])
+
+    def comparing_posts_in_context(self, response, response_second_page):
         sort = Post.objects.all().order_by('-pub_date')
         for i, cont in enumerate(
                 response.context['page_obj'].object_list):

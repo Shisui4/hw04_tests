@@ -10,6 +10,11 @@ class Group(models.Model):
     description = models.TextField("Описание группы")
     slug = models.SlugField(unique=True)
 
+    class Meta:
+        ordering = ('title',)
+        verbose_name = 'Группа'
+        verbose_name_plural = 'Группы'
+
     def __str__(self):
         return self.title
 
@@ -24,6 +29,17 @@ class Post(models.Model):
                               on_delete=models.SET_NULL,
                               blank=True, null=True, related_name='posts',
                               help_text='Поле выбора группы')
+    image = models.ImageField(
+        'Картинка',
+        upload_to='posts/',
+        blank=True,
+        help_text='Изображение, которое относится к посту'
+    )
+
+    class Meta:
+        ordering = ('-pub_date',)
+        verbose_name = 'Пост'
+        verbose_name_plural = 'Посты'
 
     def __str__(self):
         return self.text[:15]
