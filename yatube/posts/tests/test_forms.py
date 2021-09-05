@@ -7,8 +7,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
-from ..forms import PostForm, CommentForm
-from ..models import Group, Post, User, Comment
+from ..forms import PostForm
+from ..models import Comment, Group, Post, User
 
 User = get_user_model()
 
@@ -173,18 +173,21 @@ class PostFormTest(TestCase):
 
     def test_comment_create_guest(self):
         """Валидная форма не создает коммент в Comment гостем."""
-        posts_count = Post.objects.count()
+        comment_count = Comment.objects.count()
         form_data = {
             'text': 'Какой то текст для проверки коммента'
         }
-        response = self.authorized_client.post(
+        response = self.guest_client.post(
             reverse('posts:add_comment', kwargs={'post_id': self.post.id}),
             data=form_data,
             follow=True
         )
-        self.assertRedirects(response, reverse(
-            'posts:post_detail', kwargs={'post_id': self.post.id}))
-        self.assertEqual(Comment.objects.count(), posts_count)
+        login_url = reverse('users:login')
+        new_post_url = reverse('posts:add_comment',
+                               kwargs={'post_id': self.post.id})
+        target_url = f'{login_url}?next={new_post_url}'
+        self.assertRedirects(response, target_url)
+        self.assertEqual(Comment.objects.count(), comment_count)
         self.assertFalse(
             Comment.objects.filter(
                 text='Текст проверки создания коммента',

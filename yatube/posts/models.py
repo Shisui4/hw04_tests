@@ -21,7 +21,9 @@ class Group(models.Model):
 
 class Post(models.Model):
     text = models.TextField('Текст', help_text='Поле ввода текста')
-    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
+    pub_date = models.DateTimeField('Дата публикации',
+                                    auto_now_add=True,
+                                    db_index=True)
     author = models.ForeignKey(User, verbose_name='Автор',
                                on_delete=models.CASCADE,
                                related_name='posts')
@@ -63,3 +65,12 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.text[:15]
+
+
+class Follow(models.Model):
+    user = models.ForeignKey(User, verbose_name='Подписчик',
+                             on_delete=models.CASCADE,
+                             related_name='follower')
+    author = models.ForeignKey(User, verbose_name='Издатель',
+                               on_delete=models.CASCADE,
+                               related_name='following')

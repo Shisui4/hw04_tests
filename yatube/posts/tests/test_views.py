@@ -1,10 +1,9 @@
 import shutil
 import tempfile
-
 from datetime import timedelta
 
-from django.conf import settings
 from django import forms
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
@@ -201,8 +200,3 @@ class PostsPageTest(TestCase):
         sort = Post.objects.all().order_by('-pub_date')
         post = response.context['page_obj'].object_list[0]
         self.assertEqual(post.image, sort[0].image)
-
-    #def test_post_with_image(self):
-    #    page = {}
-    #    response = self.authorized_client.get(reverse('posts:index'))
-
