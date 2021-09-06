@@ -35,6 +35,7 @@ def group_posts(request, slug):
     return render(request, template, context)
 
 
+@login_required
 def profile(request, username):
     author = get_object_or_404(User, username=username)
     posts_profile = author.posts.all().order_by('-pub_date')
@@ -42,10 +43,15 @@ def profile(request, username):
     paginator = Paginator(posts_profile, settings.CONSTANTA_POSTS_ON_PAGE)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+    try:
+        following = Follow.objects.get(user=request.user, author=author)
+    except Exception:
+        following = False
     context = {
         'author': author,
         'page_obj': page_obj,
         'posts_count': posts_count,
+        'following': following,
     }
     return render(request, 'posts/profile.html', context)
 
@@ -124,11 +130,13 @@ def profile_follow(request, username):
     author = get_object_or_404(User, username=username)
     if request.user != author:
         Follow.objects.get_or_create(user=request.user, author=author)
-    return redirect('post:profile', username=username)
+    return redirect('posts:profile', username=username)
 
 
 @login_required
 def profile_unfollow(request, username):
     follow_author = get_object_or_404(User, username=username)
-    Follow.objets.delete(user=request.user, author=follow_author).delete()
-    return redirect('post:profile', username=username)
+    unfollow = Follow.objects.get(user=request.user, author=follow_author)
+    if unfollow is not None:
+        unfollow.delete()
+    return redirect('posts:profile', username=username)
